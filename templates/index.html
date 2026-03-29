@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্মার্ট পাসপোর্ট স্টুডিও - Python Web</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* আগের সেই জোশ Glassmorphism CSS টাই এখানে রাখবি */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; }
+        body { background: linear-gradient(45deg, #ff00cc, #333399, #00c9ff, #92fe9d); background-size: 400% 400%; animation: gradientBG 15s ease infinite; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; color: #fff; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); padding: 40px; width: 100%; max-width: 500px; text-align: center; }
+        h2 { margin-bottom: 25px; font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 16px; }
+        input[type="file"], input[type="number"] { width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 10px; color: #fff; outline: none; font-size: 16px; transition: 0.3s; }
+        input[type="file"]::file-selector-button { background: rgba(255, 255, 255, 0.2); border: none; padding: 8px 15px; border-radius: 5px; color: #fff; cursor: pointer; margin-right: 15px; }
+        input[type="number"] { background: rgba(255, 255, 255, 0.2); color: #fff; }
+        .btn-submit { width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        #result-container { margin-top: 30px; display: none; }
+        #result-img { max-width: 100%; border-radius: 10px; border: 2px solid rgba(255,255,255,0.4); margin-bottom: 15px; }
+        .btn-print { background: linear-gradient(to right, #00b09b, #96c93d); }
+        #loading { display: none; margin-top: 15px; font-weight: bold; }
+        @media print { body * { visibility: hidden; } #result-img { visibility: visible; position: absolute; left: 0; top: 0; width: 100%; height: auto; } }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <h2>পাসপোর্ট মেকার (Python)</h2>
+        <form id="uploadForm">
+            <div class="input-group">
+                <label>১. ছবি নির্বাচন করুন (JPG/PNG)</label>
+                <input type="file" id="imageInput" accept="image/*" required>
+            </div>
+            <div class="input-group">
+                <label>২. কত কপি ছবি লাগবে?</label>
+                <input type="number" id="copiesInput" min="1" max="30" value="4" required>
+            </div>
+            <button type="submit" class="btn-submit">A4 পেপার জেনারেট করুন</button>
+        </form>
+
+        <div id="loading">প্রসেসিং হচ্ছে... একটু ওয়েট কর দোস্ত ⏳</div>
+
+        <div id="result-container">
+            <img id="result-img" src="" alt="A4 Ready Print">
+            <button onclick="window.print()" class="btn-submit btn-print">🖨️ সরাসরি প্রিন্ট করুন</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const imageFile = document.getElementById('imageInput').files[0];
+            const copies = document.getElementById('copiesInput').value;
+            if (!imageFile) return;
+
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            formData.append('copies', copies);
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result-container').style.display = 'none';
+
+            // এখানে সরাসরি /process রাউটে রিকোয়েস্ট যাবে
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                document.getElementById('loading').style.display = 'none';
+                const imgUrl = URL.createObjectURL(blob);
+                document.getElementById('result-img').src = imgUrl;
+                document.getElementById('result-container').style.display = 'block';
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                alert('কোনো একটা সমস্যা হয়েছে!');
+            });
+        });
+    </script>
+</body>
+</html>
